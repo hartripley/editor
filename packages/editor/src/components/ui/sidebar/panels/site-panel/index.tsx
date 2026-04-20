@@ -422,12 +422,6 @@ const LevelReferences = memo(function LevelReferences({
     if (!file) return
     e.target.value = ''
 
-    if (!projectId) {
-      useUploadStore.getState().startUpload(levelId, 'scan', file.name)
-      useUploadStore.getState().setError(levelId, 'No active project. Please open a project first.')
-      return
-    }
-
     if (file.size > MAX_FILE_SIZE) {
       useUploadStore.getState().startUpload(levelId, 'scan', file.name)
       useUploadStore
@@ -453,6 +447,26 @@ const LevelReferences = memo(function LevelReferences({
     }
 
     const type = isScan ? 'scan' : 'guide'
+
+    if (!projectId || !onUploadAsset) {
+      clearUpload(levelId)
+      const url = URL.createObjectURL(file)
+      const id = `${type}_${Math.random().toString(36).substr(2, 9)}` as any
+      useScene.getState().createNode({
+        object: 'node',
+        id,
+        type,
+        parentId: levelId,
+        visible: true,
+        url,
+        position: [0, 0, 0],
+        rotation: 0,
+        scale: 1,
+        ...(type === 'guide' ? { opacity: 50 } : { opacity: 100 }),
+        metadata: {},
+      } as any)
+      return
+    }
 
     clearUpload(levelId)
     onUploadAsset?.(projectId, levelId, file, type)
